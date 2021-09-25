@@ -16,9 +16,7 @@
     <Authors>higeneko760414</Authors>
     <Company>higeneko.ne.jp</Company>
     <Product>バージョン番号自動更新</Product>
-    <Description>ビルド時に自動的にアセンブリのバージョン番号をUPします。
-メジャーおよびマイナーバージョンはプロジェクトプロパティで設定した値を使用します。
-ビルド番号は2020/01/01からの経過日数が設定され、リビジョンはビルド時刻(hhmmss)から最後の1桁を除外したhhmmsを設定します。</Description>
+    <Description>ビルド時に自動的にアセンブリのバージョン番号をUPします。</Description>
     <Copyright>(C) 2020 higeneko760414@gmail.com</Copyright>
     <NeutralLanguage>ja-JP</NeutralLanguage>
     <Version>1.0.0.0</Version>
@@ -27,6 +25,10 @@
     <FileVersion>$(Version)</FileVersion>
     <PackageIcon>icon.png</PackageIcon>
     <PackageIconUrl />
+    <RepositoryUrl>https://github.com/higeneko2015/AutoVersioning</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/higeneko2015/AutoVersioning</PackageProjectUrl>
+    <PackageReleaseNotes>メジャーおよびマイナーバージョンはプロジェクトプロパティで設定した値を使用します。
+ビルド番号は2020/01/01からの経過日数が設定され、リビジョンはビルド時刻(hhmmss)から最後の1桁を除外したhhmmsを設定します。</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
