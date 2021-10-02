@@ -28,7 +28,8 @@
     <RepositoryUrl>https://github.com/higeneko2015/AutoVersioning</RepositoryUrl>
     <PackageProjectUrl>https://github.com/higeneko2015/AutoVersioning</PackageProjectUrl>
     <PackageReleaseNotes>メジャーおよびマイナーバージョンはプロジェクトプロパティで設定した値を使用します。
-ビルド番号は2020/01/01からの経過日数が設定され、リビジョンはビルド時刻(hhmmss)から最後の1桁を除外したhhmmsを設定します。</PackageReleaseNotes>
+ビルド番号は2020/01/01からの経過日数が設定され、リビジョンはビルド時刻(hhmmss)から最後の1桁を除外したhhmmsを設定します。
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,4 +39,53 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
+
+    <!-- ビルド前にアセンブリのバージョン番号を自動UPさせるタスク -->
+    <UsingTask TaskName="UpdateVersion" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+        <ParameterGroup>
+            <CurrentVersion ParameterType="System.String" />
+            <NewVersion ParameterType="System.String" Output="true" />
+        </ParameterGroup>
+        <Task>
+            <Using Namespace="System" />
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
+                DateTime dNow = DateTime.Now;
+                DateTime dateFrom = new DateTime(2020, 1, 1);
+                DateTime dateTo = dNow.Date;
+                double buildVer = (dateTo - dateFrom).TotalDays;
+
+                String revision = dNow.TimeOfDay.ToString("hhmmss").Remove(5);
+
+                if (String.IsNullOrEmpty(CurrentVersion) == true)
+                {
+                    CurrentVersion = "1.0.0.0";
+                }
+
+                String[] arr = CurrentVersion.Split('.');
+                arr[2] = buildVer.ToString();
+                arr[3] = revision;
+
+                NewVersion = String.Join(".", arr);
+                ]]>
+            </Code>
+        </Task>
+    </UsingTask>
+    
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <UpdateVersion CurrentVersion="$(Version)">
+            <Output PropertyName="Version" TaskParameter="NewVersion" />
+            <Output PropertyName="FileVersion" TaskParameter="NewVersion" />
+            <Output PropertyName="PackageVersion" TaskParameter="NewVersion" />
+            <Output PropertyName="AssemblyVersion" TaskParameter="NewVersion" />
+        </UpdateVersion>
+    </Target>
+
+    <Target Name="CopyNuPkgFile" AfterTargets="AfterBuild">
+        <ItemGroup>
+            <NewNugetFile Include="$(OutputPath)\..\*.nupkg" />
+        </ItemGroup>
+        <Move SourceFiles="@(NewNugetFile)" DestinationFolder="..\..\LocalPackages" />
+    </Target>
+
 </Project>

@@ -37,6 +37,9 @@
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
         <UpdateVersion CurrentVersion="$(Version)">
             <Output PropertyName="Version" TaskParameter="NewVersion" />
+            <Output PropertyName="FileVersion" TaskParameter="NewVersion" />
+            <Output PropertyName="PackageVersion" TaskParameter="NewVersion" />
+            <Output PropertyName="AssemblyVersion" TaskParameter="NewVersion" />
         </UpdateVersion>
     </Target>
 </Project>
