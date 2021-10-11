@@ -6,6 +6,7 @@
         <ParameterGroup>
             <CurrentVersion ParameterType="System.String" />
             <NewVersion ParameterType="System.String" Output="true" />
+            <PackVersion ParameterType="System.String" Output="true" />
         </ParameterGroup>
         <Task>
             <Using Namespace="System" />
@@ -28,6 +29,12 @@
                 arr[3] = revision;
 
                 NewVersion = String.Join(".", arr);
+
+                if ("$(Configuration)" == "Debug")
+                {
+                    arr[3] = arr[3] + "-Debug";
+                }
+                PackVersion = String.Join(".", arr);
                 ]]>
             </Code>
         </Task>
@@ -38,7 +45,7 @@
         <UpdateVersion CurrentVersion="$(Version)">
             <Output PropertyName="Version" TaskParameter="NewVersion" />
             <Output PropertyName="FileVersion" TaskParameter="NewVersion" />
-            <Output PropertyName="PackageVersion" TaskParameter="NewVersion" />
+            <Output PropertyName="PackageVersion" TaskParameter="PackVersion" />
             <Output PropertyName="AssemblyVersion" TaskParameter="NewVersion" />
         </UpdateVersion>
     </Target>

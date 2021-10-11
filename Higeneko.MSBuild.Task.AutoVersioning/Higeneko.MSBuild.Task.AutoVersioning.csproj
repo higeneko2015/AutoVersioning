@@ -1,0 +1,97 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <!-- ビルド時にnupkgを作成する -->
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <!-- ビルド時の出力ファイルをpkgに含めない -->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <!-- libフォルダ内にdllが存在しないことによるnupack時のワーニング表示を行わない -->
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <!-- アナライザーによるチェックを行わない設定１ -->
+        <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+        <!-- アナライザーによるチェックを行わない設定２ -->
+        <EnableNETAnalyzers>false</EnableNETAnalyzers>
+        <!-- nupkgの出力先を指定 -->
+        <PackageOutputPath>..\..\LocalPackages</PackageOutputPath>
+        <!-- 以下、nupkgの設定 -->
+        <Authors>higeneko760414</Authors>
+        <Company>higeneko.ne.jp</Company>
+        <Product>バージョン番号自動更新</Product>
+        <Description>ビルド時に自動的にアセンブリのバージョン番号をUPします。</Description>
+        <Copyright>(C) 2020 higeneko760414@gmail.com</Copyright>
+        <NeutralLanguage>ja-JP</NeutralLanguage>
+        <Version>1.0.0.0</Version>
+        <PackageIcon>icon.png</PackageIcon>
+        <PackageIconUrl />
+        <RepositoryUrl>https://github.com/higeneko2015/AutoVersioning</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/higeneko2015/AutoVersioning</PackageProjectUrl>
+        <PackageReleaseNotes>メジャーおよびマイナーバージョンはプロジェクトプロパティで設定した値を使用します。
+ビルド番号は2020/01/01からの経過日数が設定され、リビジョンはビルド時刻(hhmmss)から最後の1桁を除外したhhmmsを設定します。
+        </PackageReleaseNotes>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Pack="true" IncludeInPackage="false" Update="Higeneko.MSBuild.Task.AutoVersioning.targets" PackagePath="build/Higeneko.MSBuild.Task.AutoVersioning.targets" />
+        <None Include="icon.png">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+    </ItemGroup>
+
+    <!-- ビルド前にアセンブリのバージョン番号を自動UPさせるタスク -->
+    <UsingTask TaskName="UpdateVersion" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+        <ParameterGroup>
+            <CurrentVersion ParameterType="System.String" />
+            <NewVersion ParameterType="System.String" Output="true" />
+            <PackVersion ParameterType="System.String" Output="true" />
+        </ParameterGroup>
+        <Task>
+            <Using Namespace="System" />
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
+                DateTime dNow = DateTime.Now;
+                DateTime dateFrom = new DateTime(2020, 1, 1);
+                DateTime dateTo = dNow.Date;
+                double buildVer = (dateTo - dateFrom).TotalDays;
+
+                String revision = dNow.TimeOfDay.ToString("hhmmss").Remove(5);
+
+                if (String.IsNullOrEmpty(CurrentVersion) == true)
+                {
+                    CurrentVersion = "1.0.0.0";
+                }
+
+                String[] arr = CurrentVersion.Split('.');
+                arr[2] = buildVer.ToString();
+                arr[3] = revision;
+
+                NewVersion = String.Join(".", arr);
+
+                if ("$(Configuration)" == "Debug")
+                {
+                    arr[3] = arr[3] + "-Debug";
+                }
+                PackVersion = String.Join(".", arr);
+                ]]>
+            </Code>
+        </Task>
+    </UsingTask>
+    
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <UpdateVersion CurrentVersion="$(Version)">
+            <Output PropertyName="Version" TaskParameter="NewVersion" />
+            <Output PropertyName="FileVersion" TaskParameter="NewVersion" />
+            <Output PropertyName="PackageVersion" TaskParameter="PackVersion" />
+            <Output PropertyName="AssemblyVersion" TaskParameter="NewVersion" />
+        </UpdateVersion>
+    </Target>
+
+    <Target Name="CopyNuPkgFile" AfterTargets="AfterBuild">
+        <ItemGroup>
+            <NewNugetFile Include="$(OutputPath)\..\*.nupkg" />
+        </ItemGroup>
+        <Move SourceFiles="@(NewNugetFile)" DestinationFolder="..\..\LocalPackages" />
+    </Target>
+
+</Project>
